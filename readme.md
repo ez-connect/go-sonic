@@ -34,14 +34,14 @@ func main() {
 		{"id:5hg67f8dg5", "Spider man"},
 		{"id:1m2n3b4vf6", "Batman"},
 		{"id:68d96h5h9d0", "This is another movie"},
-	})
+	}, "eng")
 
 	search, err := sonic.NewSearch("localhost", 1491, "SecretPassword")
 	if err != nil {
 		panic(err)
 	}
 
-	results, _ := search.Query("movies", "general", "man", 10, 0)
+	results, _ := search.Query("movies", "general", "man", 10, 0, "eng")
 
 	fmt.Println(results)
 }
@@ -62,5 +62,5 @@ BenchmarkIngesterChannel_Push-8              	       1	1023322864 ns/op
 PASS
 ```
 
-Bulk push is faster than for loop on Push. 
+Bulk push is faster than for loop on Push.
 Hardware detail: Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz

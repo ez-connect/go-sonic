@@ -1,1 +1,3 @@
-module github.com/expectedsh/go-sonic
+module github.com/ez-connect/go-sonic
+
+go 1.12

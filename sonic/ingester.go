@@ -21,14 +21,14 @@ type IngestBulkError struct {
 // Ingestable is used for altering the search index (push, pop and flush).
 type Ingestable interface {
 	// Push search data in the index.
-	// Command syntax PUSH <collection> <bucket> <object> "<text>"
-	Push(collection, bucket, object, text string) (err error)
+	// Command syntax PUSH <collection> <bucket> <object> "<text> LANG(<locale>)"
+	Push(collection, bucket, object, text, locale string) (err error)
 
 	// BulkPush will execute N (parallelRoutines) goroutines at the same time to
 	// dispatch the records at best.
 	// If parallelRoutines <= 0; parallelRoutines will be equal to 1.
 	// If parallelRoutines > len(records); parallelRoutines will be equal to len(records).
-	BulkPush(collection, bucket string, parallelRoutines int, records []IngestBulkRecord) []IngestBulkError
+	BulkPush(collection, bucket string, parallelRoutines int, records []IngestBulkRecord, locale string) []IngestBulkError
 
 	// Pop search data from the index.
 	// Command syntax POP <collection> <bucket> <object> "<text>".
@@ -96,8 +96,8 @@ func NewIngester(host string, port int, password string) (Ingestable, error) {
 	}, nil
 }
 
-func (i ingesterChannel) Push(collection, bucket, object, text string) (err error) {
-	err = i.write(fmt.Sprintf("%s %s %s %s \"%s\"", push, collection, bucket, object, text))
+func (i ingesterChannel) Push(collection, bucket, object, text, locale string) (err error) {
+	err = i.write(fmt.Sprintf("%s %s %s %s \"%s\" LANG(%s)", push, collection, bucket, object, text, locale))
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func (i ingesterChannel) Push(collection, bucket, object, text string) (err erro
 	return nil
 }
 
-func (i ingesterChannel) BulkPush(collection, bucket string, parallelRoutines int, records []IngestBulkRecord) (errs []IngestBulkError) {
+func (i ingesterChannel) BulkPush(collection, bucket string, parallelRoutines int, records []IngestBulkRecord, locale string) (errs []IngestBulkError) {
 	if parallelRoutines <= 0 {
 		parallelRoutines = 1
 	}
@@ -133,8 +133,8 @@ func (i ingesterChannel) BulkPush(collection, bucket string, parallelRoutines in
 					addBulkError(&errs, rec, ErrClosed, errMutex)
 				}
 				err := conn.write(fmt.Sprintf(
-					"%s %s %s %s \"%s\"",
-					push, collection, bucket, rec.Object, rec.Text),
+					"%s %s %s %s \"%s\" LANG(%s)",
+					push, collection, bucket, rec.Object, rec.Text, locale),
 				)
 				if err != nil {
 					addBulkError(&errs, rec, err, errMutex)
